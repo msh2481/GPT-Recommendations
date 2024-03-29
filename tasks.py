@@ -1,8 +1,13 @@
 import asyncio
 import json
+from typing import Callable
 
 from beartype import beartype as typed
-from tasks import batch_invoke, invoke, task_info
+
+from langchain_openai.chat_models import ChatOpenAI  # type: ignore
+
+model = ChatOpenAI(model_name="gpt-3.5-turbo")
+
 
 """
 A command-line tool for creativity training. 
@@ -30,29 +35,28 @@ Creativity:
 """
 
 
-JSON = dict | list
+@typed
+def assert_is_str(prompt) -> str:
+    assert isinstance(prompt, str)
+    return prompt
 
 
 @typed
-def append_jsonl(path: str, data: JSON) -> None:
-    with open(path, "a", encoding="utf-8") as f:
-        json_string = json.dumps(data, ensure_ascii=False)
-        print(json_string, file=f, flush=True)
+def invoke(prompt: str) -> str:
+    return assert_is_str(model.invoke(prompt).content)
 
 
 @typed
-def read_jsonl(path: str) -> list[JSON]:
-    result: list[JSON] = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            result.append(json.loads(line))
-    return result
+async def batch_invoke(prompts: list[str]) -> list[str]:
+    result = await asyncio.gather(*[model.ainvoke(prompt) for prompt in prompts])
+    unpacked = [assert_is_str(message.content) for message in result]
+    return unpacked
 
 
-async def main():
-    # test of batch_invoke
-    print(*(await batch_invoke(["hello", "bye"])), sep="\n")
+Info = tuple[Callable[[], list[str]], Callable[[str, list[str]], dict]]
+task_info: dict[str, Info] = {}
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+@typed
+def prepare_IT() -> list[str]:
+    return []
