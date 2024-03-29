@@ -1,15 +1,28 @@
 # cogtrain
 A command-line tool for creativity training. 
 
+## Usage
+Create a directory `data` and `extra_questions.jsonl` in it. Each line there is a question that will be tracked for each testing session (e.g. "Your mood on 1 to 5 scale").
+
+Then prepare the tasks you need, e.g. for Insight task:
+```bash
+python cogtrain.py prepare IS --n 100
+```
+
+Finally, run the test:
+```bash
+python cogtrain.py test IS --n 4 --t 180
+```
+
 ## Supported tasks
 
 Creativity:
 
-1. Insight task (IT): An unusual sitiation is described and the participant is asked to think of different causes for the situation.
-2. Utopian situations task (UST): The participant is instructed to imagine himself in a utopian situation and identify original consequences.
-3. Product improvement task (PIT): The participant is prompted to think about how to improve a product, e.g. toy elephant, to make it more popular and interesting.
-4. Alternative Uses Task (AUT): Generating novel uses for common objects.
-5. Remote Associates Task (RAT): The participant is presented with three seemingly unrelated words and must find a fourth word that connects them all. This task measures associative thinking and the ability to make novel connections.
+1. Insight (IS): An unusual sitiation is described and the participant is asked to think of different causes for the situation.
+2. Utopian situations  (US): The participant is instructed to imagine himself in a utopian situation and identify original consequences.
+3. Product improvement (PI): The participant is prompted to think about how to improve a product, e.g. toy elephant, to make it more popular and interesting.
+4. Alternative uses (AU): Generating novel uses for common objects.
+5. Remote associates (RA): The participant is presented with three seemingly unrelated words and must find a fourth word that connects them all. This task measures associative thinking and the ability to make novel connections.
 
 External, just tracking the results:
 
