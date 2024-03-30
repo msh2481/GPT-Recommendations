@@ -53,20 +53,22 @@ Example output:
   "In a small, tight-knit community, a rumor about a hidden treasure buried somewhere within the town spreads rapidly, inciting a frenzy of digging and searches by the locals."
 ]
 """.strip()
+    task_description = "An unusual situation is described below, your task is to think of different causes for the situation."
     while True:
-        response = invoke(prompt, gpt4=(random() < 0.5))
         try:
+            response = invoke(prompt, gpt4=(random() < 0.5))
             if response.startswith("```json"):
                 response = response[7:-3]
             results = json.loads(response)
             assert isinstance(results, list)
-            return results
+            prompted = [task_description + "\n" + task for task in results]
+            return prompted
         except:
             print(f"Error: {response}")
 
 
 @typed
-def grade_IS(task: str, responses: list[str]) -> dict:
+def grade_originality(task: str, responses: list[str]) -> dict:
     k = 5
     gradings: list[list[float]] = [[] for _ in responses]
 
@@ -102,4 +104,135 @@ Provide your grade as a single integer, don't print anything else.
     }
 
 
-task_info["IS"] = (prepare_IS, grade_IS)
+task_info["IS"] = (prepare_IS, grade_originality)
+
+
+@typed
+def prepare_US() -> list[str]:
+    prompt = """
+Please generate 10 examples of weird worlds, which have one major distinction from ours.
+Generate only very unique universes, which nobody has thought of before.
+Also don't provide too different worlds, they should look similar to ours, except for one local difference.
+Provide the output as a JSON array of strings.
+
+Example output:
+[
+    "A world where all secrets are protected by unbreakable encryption, ensuring privacy and security.",
+    "In this reality, the concept of currency does not exist. Instead, all societies operate on a sophisticated barter system, where goods and services are exchanged directly based on mutual agreements.",
+    "In a parallel universe, all forms of transportation are based on sophisticated floating technologies. Vehicles, buildings, and even personal movements are powered by anti-gravity devices.",
+    "A world where plasma weapons have replaced traditional firearms as the primary means of defense.",
+    "Here, plants possess the ability to grow at an accelerated rate, maturing from seedlings to full-grown in just a few days, depending on the species.",
+    "In this alternate reality, water behaves as a rare and non-renewable resource due to a unique geological history of the planet.",
+    "A world where invisibility cloaks enable individuals to move about undetected.",
+    "This parallel world discovered a natural resource that emits a constant, gentle light.",
+    "In another universe, the concept of sleep does not exist for any living creature. Instead, beings have evolved to rest and rejuvenate through an hour of complete stillness and silence each day.",
+    "Here, the gravitational force of the Earth is half as strong as in our universe.",
+]
+""".strip()
+    task_description = "An utopical situation is described below, your task is to think of interesting consequences from it."
+    while True:
+        try:
+            response = invoke(prompt, gpt4=True, T=1.5)
+            if response.startswith("```json"):
+                response = response[7:-3]
+            results = json.loads(response)
+            assert isinstance(results, list)
+            prompted = [task_description + "\n" + task for task in results]
+            return prompted
+        except:
+            print(f"Error: {response}")
+
+task_info["US"] = (prepare_US, grade_originality)
+
+
+@typed
+def prepare_PI() -> list[str]:
+    prompt = """
+Please generate 30 examples of products that might be popular among common people.
+Provide the output as a JSON array of strings.
+
+Example output:
+[
+    "Wireless keyboard",
+    "Mechanical pencil",
+    "Lava lamp",
+    "Trash bags",
+    "Reusable water bottle",
+    "Electric toothbrush",
+    "Laptop backpack",
+    "Yoga mat",
+    "Comfortable and durable sneakers",
+    "Magnifying glass",
+    "Bluetooth speakers",
+    "Silicone baking mat",
+    "Eco-friendly shopping bags",
+    "Skincare product",
+    "Fitness tracker band",
+    "Cotton bed sheet",
+    "High-speed HDMI cable",
+    "Solar-powered garden light",
+    "Memory foam pillow",
+    "Reusable silicone food bag",
+    "Photo album",
+    "Desktop calendar",
+    "Biodegradable phone case",
+    "Digital kitchen scale",
+    "Clip-on book reading light",
+    "Desk organizer",
+    "Spice rack organizer",
+    "Reusable makeup remover pad",
+    "Scented candle",
+    "MP3 player",
+]
+""".strip()
+    task_description = "For a product given below you need to suggest possible improvements, as many and as original as possible."
+    while True:
+        try:
+            response = invoke(prompt, gpt4=True, T=1.0)
+            if response.startswith("```json"):
+                response = response[7:-3]
+            results = json.loads(response)
+            assert isinstance(results, list)
+            prompted = [task_description + "\n" + task for task in results]
+            return prompted
+        except:
+            print(f"Error: {response}")
+
+
+task_info["PI"] = (prepare_PI, grade_originality)
+
+
+@typed
+def prepare_AU() -> list[str]:
+    prompt = """
+Please generate 30 everyday objects that might have a different application.
+Provide the output as a JSON array of strings.
+
+Example output:
+[
+    "Straws",
+    "Sponges",
+    "Glass jar",
+    "Vinegar",
+    "Paper clips",
+    "Duct tape",
+    "Tea bags",
+    "Ruler",
+    "Rubber band",
+    "Pencil",
+]
+""".strip()
+    task_description = "An everyday object is given below, think of as many possible ways to use it as possible."
+    while True:
+        try:
+            response = invoke(prompt, gpt4=True, T=1.0)
+            if response.startswith("```json"):
+                response = response[7:-3]
+            results = json.loads(response)
+            assert isinstance(results, list)
+            prompted = [task_description + "\n" + task for task in results]
+            return prompted
+        except:
+            print(f"Error: {response}")
+
+task_info["AU"] = (prepare_AU, grade_originality)
