@@ -30,3 +30,5 @@ External, just tracking the results:
 
 ## References
 - Sun, Jiangzhou, et al. "Training your brain to be more creative: brain functional and structural changes induced by divergent thinking training." Human brain mapping 37.10 (2016): 3375-3387
+- Olteţeanu, Ana-Maria, Mikkel Schöttner, and Susanne Schuberth. "Computationally resurrecting the functional remote associates test using cognitive word associates and principles from a computational solver." Knowledge-Based Systems 168 (2019): 1-9.
+- [XML version of the University of South Florida Free Association Norms (USF-FAN)](http://rali.iro.umontreal.ca/rali/?q=en/USF-FAN)
