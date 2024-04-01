@@ -33,15 +33,6 @@ def read_jsonl(path: str) -> Sequence[JSON]:
     return result
 
 
-@typed
-def prepare_tasks(task_name: str, samples: int) -> None:
-    buffer: list[JSON] = []
-    prepare_fn, grade_fn = task_info[task_name]
-    while len(buffer) < samples:
-        buffer.extend(prepare_fn())
-        print(f"Prepared {len(buffer)} samples...")
-    append_jsonl(f"data/{task_name}_samples.jsonl", buffer)
-
 
 @typed
 def set_used_count(task_name: str, count: int) -> None:
@@ -67,6 +58,39 @@ def shuffle_tasks(task_name: str) -> None:
     append_jsonl(f"data/{task_name}_samples.jsonl", tasks)
     set_used_count(task_name, 0)
 
+@typed
+def prepare_tasks(task_name: str, samples: int) -> None:
+    buffer: list[JSON] = []
+    prepare_fn, grade_fn = task_info[task_name]
+    while len(buffer) < samples:
+        buffer.extend(prepare_fn())
+        print(f"Prepared {len(buffer)} samples...")
+    append_jsonl(f"data/{task_name}_samples.jsonl", buffer)
+
+@typed
+def get_prepared_count(task_name: str) -> int:
+    try:
+        return len(read_jsonl(f"data/{task_name}_samples.jsonl"))
+    except FileNotFoundError:
+        return 0
+
+@typed
+def prepare_all_tasks(samples: int) -> None:
+    counts = {
+        task_name: get_prepared_count(task_name)
+        for task_name in task_info.keys()
+    }
+    while True:
+        effective = False
+        for task_name in task_info.keys():
+            if counts[task_name] < samples:
+                effective = True
+                prepare_tasks(task_name, 100)
+                counts[task_name] = get_prepared_count(task_name)
+        if not effective:
+            break
+    for task_name in task_info.keys():
+        shuffle_tasks(task_name)
 
 
 @typed
@@ -122,7 +146,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "task_name",
         type=str,
-        choices=task_info.keys(),
+        choices=list(task_info.keys()) + ["all"],
     )
     parser.add_argument(
         "--n",
@@ -144,7 +168,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.action == "prepare":
-        prepare_tasks(args.task_name, args.n)
+        if args.task_name == "all":
+            prepare_all_tasks(args.n)
+        else:
+            prepare_tasks(args.task_name, args.n)
+    elif args.action == "prepare_all":
+        prepare_all_tasks(args.n)
     elif args.action == "test":
         test_on_task(args.task_name, args.n, args.t)
     elif args.action == "shuffle":
