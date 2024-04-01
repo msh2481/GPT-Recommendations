@@ -35845,27 +35845,6 @@ LEDGE	MOUNTAIN	.014
 LEDGE	ROCK	.014
 LEDGE	SUICIDE	.014
 LEDGE	WALK	.014
-something strange
-LEFT
-@word
-something strange
-LEFT
-@g
-something strange
-LEFT
-@p
-something strange
-LEFT
-@fsg
-something strange
-LEFT
-@fr
-something strange
-LEFT
-@pos
-something strange
-LEFT
-@con
 LEG	ARM	.503
 LEG	FOOT	.206
 LEG	WALK	.036

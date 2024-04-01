@@ -13,6 +13,8 @@ for elem in next(iter(assoc.values()))["cue"]:
             fsg = child["@fsg"]
             print(f"{cue}\t{target}\t{fsg}")
         except:
-            print("something strange")
-            print(cue)
-            print(child)
+            # print("something strange")
+            # print(cue)
+            # print(child)
+            # break
+            continue

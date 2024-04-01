@@ -1,44 +1,27 @@
 import asyncio
 import json
-from random import random
+import random
+from collections import defaultdict
+from itertools import combinations
 from typing import Callable
 
 import numpy as np
 from beartype import beartype as typed
+from tqdm import tqdm
+
 from gpt import batch_invoke, invoke
 
-"""
-A command-line tool for creativity training. 
-
-## Supported tasks
-
-Creativity:
-
-1. Insight (IS): An unusual sitiation is described and the participant is asked to think of different causes for the situation.
-2. Utopian situations  (US): The participant is instructed to imagine himself in a utopian situation and identify original consequences.
-3. Product improvement (PI): The participant is prompted to think about how to improve a product, e.g. toy elephant, to make it more popular and interesting.
-4. Alternative uses (AU): Generating novel uses for common objects.
-5. Remote associates (RA): The participant is presented with three seemingly unrelated words and must find a fourth word that connects them all. This task measures associative thinking and the ability to make novel connections.
-
-## Architecture
-
-- `batch_invoke(prompts: list[str]): list[str]`. The main interface to call chat assistants.
-- `append_jsonl(path: str, data: JSON): None`. Appends json line to a jsonl file.
-- `read_jsonl(path: str): list[JSON]`. Reads json lines from a given file.
-- `task_info: dict[tuple[Callable[[], list[str]], Callable[[str, list[str]], dict]]]`. Dictionary that for a task name a function to generate tasks of this type, and a function that takes task and responses and returns metrics.
-- `prepare_tasks(task_name: str, samples: int): None`. Generates instances of a given task type and stores them to `f"data/{task_name}_{samples}.jsonl"`.
-- `test_on_task(task_name: str, samples: int, timeout: int): None`. Gives `samples` instances of a given task type to the participant, taking his responses that were given during `timeout` seconds, grading them, and storing metrics in `f"data/{task_name}_{results}.jsonl"`.
-- `show_results(task_name: str, metric: str): None`. Shows the results of a given task type and metric as a Matplotlib plot.
-- Command-line interface based on `argparse` which recognizes `prepare TASK_NAME SAMPLES`, `test TASK_NAME SAMPLES TIMEOUT` and `show TASK_NAME METRIC` commands.
-"""
-
-
-Info = tuple[Callable[[], list[str]], Callable[[str, list[str]], dict]]
+TaskInstance = dict[str, str]
+Response = str
+Metrics = dict[str, str | float | list[float]]
+Info = tuple[
+    Callable[[], list[TaskInstance]], Callable[[TaskInstance, list[Response]], Metrics]
+]
 task_info: dict[str, Info] = {}
 
 
 @typed
-def prepare_IS() -> list[str]:
+def prepare_IS() -> list[TaskInstance]:
     prompt = """
 Please generate 5 examples of insight tasks that could be used in a psychology study. 
 Each example is a description of an unusual situation. In the next stage of the test participants will be asked to think of possible causes of these situations.
@@ -56,19 +39,19 @@ Example output:
     task_description = "An unusual situation is described below, your task is to think of different causes for the situation."
     while True:
         try:
-            response = invoke(prompt, gpt4=(random() < 0.5))
+            response = invoke(prompt, gpt4=(random.random() < 0.5))
             if response.startswith("```json"):
                 response = response[7:-3]
             results = json.loads(response)
             assert isinstance(results, list)
-            prompted = [task_description + "\n" + task for task in results]
+            prompted = [{"prompt": task_description + "\n" + task} for task in results]
             return prompted
         except:
             print(f"Error: {response}")
 
 
 @typed
-def grade_originality(task: str, responses: list[str]) -> dict:
+def grade_originality(task: TaskInstance, responses: list[Response]) -> Metrics:
     k = 5
     gradings: list[list[float]] = [[] for _ in responses]
 
@@ -77,7 +60,7 @@ def grade_originality(task: str, responses: list[str]) -> dict:
         prompt = f"""
 You are evaluating responses of participants in a creativity training study. 
 The task given to them was:
-{task}
+{task["prompt"]}
 
 The response is:
 {response}
@@ -108,7 +91,7 @@ task_info["IS"] = (prepare_IS, grade_originality)
 
 
 @typed
-def prepare_US() -> list[str]:
+def prepare_US() -> list[TaskInstance]:
     prompt = """
 Please generate 10 examples of weird worlds, which have one major distinction from ours.
 Generate only very unique universes, which nobody has thought of before.
@@ -137,16 +120,17 @@ Example output:
                 response = response[7:-3]
             results = json.loads(response)
             assert isinstance(results, list)
-            prompted = [task_description + "\n" + task for task in results]
+            prompted = [{"prompt": task_description + "\n" + task} for task in results]
             return prompted
         except:
             print(f"Error: {response}")
+
 
 task_info["US"] = (prepare_US, grade_originality)
 
 
 @typed
-def prepare_PI() -> list[str]:
+def prepare_PI() -> list[TaskInstance]:
     prompt = """
 Please generate 30 examples of products that might be popular among common people.
 Provide the output as a JSON array of strings.
@@ -193,7 +177,7 @@ Example output:
                 response = response[7:-3]
             results = json.loads(response)
             assert isinstance(results, list)
-            prompted = [task_description + "\n" + task for task in results]
+            prompted = [{"prompt": task_description + "\n" + task} for task in results]
             return prompted
         except:
             print(f"Error: {response}")
@@ -203,7 +187,7 @@ task_info["PI"] = (prepare_PI, grade_originality)
 
 
 @typed
-def prepare_AU() -> list[str]:
+def prepare_AU() -> list[TaskInstance]:
     prompt = """
 Please generate 30 everyday objects that might have a different application.
 Provide the output as a JSON array of strings.
@@ -230,10 +214,43 @@ Example output:
                 response = response[7:-3]
             results = json.loads(response)
             assert isinstance(results, list)
-            prompted = [task_description + "\n" + task for task in results]
+            prompted = [{"prompt": task_description + "\n" + task} for task in results]
             return prompted
         except:
             print(f"Error: {response}")
 
+
 task_info["AU"] = (prepare_AU, grade_originality)
 
+
+@typed
+def prepare_RAT() -> list[TaskInstance]:
+    connections: dict[str, list[str]] = defaultdict(list)
+    with open("cue-target.txt", "r", encoding="utf-8") as f:
+        for line in f:
+            cue, target, fsg = line.strip().split("\t")
+            connections[cue].append(target)
+    print("Read associations data")
+    tasks: list[TaskInstance] = []
+    for root, targets in tqdm(connections.items()):
+        for comb in combinations(targets, 3):
+            tasks.append(
+                {
+                    "prompt": " ".join(comb),
+                    "answer": root,
+                }
+            )
+    random.shuffle(tasks)
+    print(tasks[:10])
+    return tasks
+
+
+@typed
+def grade_RAT(task: TaskInstance, responses: list[Response]) -> Metrics:
+    is_correct = [
+        response.strip().lower() == task["answer"].lower() for response in responses
+    ]
+    return {"accuracy": sum(is_correct) / len(is_correct)}
+
+
+task_info["RAT"] = (prepare_RAT, grade_RAT)
