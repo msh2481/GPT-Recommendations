@@ -13,7 +13,7 @@ from gpt import batch_invoke, invoke
 
 TaskInstance = dict[str, str]
 Response = str
-Metrics = dict[str, str | float | list[float]]
+Metrics = dict[str, str | float | int | list[str] | list[float] | list[int]]
 Info = tuple[
     Callable[[], list[TaskInstance]], Callable[[TaskInstance, list[Response]], Metrics]
 ]
@@ -81,7 +81,9 @@ Provide your grade as a single integer, don't print anything else.
     originality_scores = np.array([sum(a) / len(a) for a in gradings])
     return {
         "fluency": len(responses),
-        "mean_originality": originality_scores.mean(),
+        "mean_originality": (
+            0.0 if len(originality_scores) == 0 else originality_scores.mean()
+        ),
         "total_originality": originality_scores.sum(),
         "originality_scores": originality_scores.tolist(),
     }
@@ -250,7 +252,9 @@ def grade_RAT(task: TaskInstance, responses: list[Response]) -> Metrics:
     is_correct = [
         response.strip().lower() == task["answer"].lower() for response in responses
     ]
-    return {"accuracy": sum(is_correct) / len(is_correct)}
+    return {
+        "accuracy": 0 if len(is_correct) == 0 else sum(is_correct) / len(is_correct)
+    }
 
 
 task_info["RAT"] = (prepare_RAT, grade_RAT)
