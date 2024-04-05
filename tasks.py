@@ -259,3 +259,96 @@ def grade_RAT(task: TaskInstance, responses: list[Response]) -> Metrics:
 
 
 task_info["RAT"] = (prepare_RAT, grade_RAT)
+
+
+@typed
+def prepare_NB() -> list[TaskInstance]:
+    return [
+        {"prompt": "Practice at https://brainscale.net/app/dual-n-back/training."}
+        for _ in range(100)
+    ]
+
+
+@typed
+def grade_NB(task: TaskInstance, responses: list[Response]) -> Metrics:
+    while True:
+        try:
+            performance = float(input("Performance (e.g. 2.92): ").strip())
+            return {"performance": performance}
+        except:
+            print("Please enter a number")
+
+
+task_info["NB"] = (prepare_NB, grade_NB)
+
+
+@typed
+def generate_arithmetic_expression(
+    num_operations: int,
+    allowed_operations: list[str] = ["+", "-", "*", "//"],
+    lam: float = 10,
+) -> str:
+    """
+    Generates an arithmetic expression based on the specified difficulty level.
+
+    Args:
+        num_operations (int): The number of operations in the expression.
+        allowed_operations (str): A list of allowed arithmetic operations.
+        lam (float): The mean for the geometric distribution.
+
+    Returns:
+        str: The generated arithmetic expression in infix notation.
+    """
+    while True:
+        remaining_operations = num_operations
+        stack: list[str] = []
+
+        while remaining_operations > 0:
+            if len(stack) < 2 or (
+                len(stack) <= remaining_operations and random.random() < 0.5
+            ):
+                num = np.random.geometric(p=1 / lam)
+                stack.append(str(num))
+            else:
+                operation = random.choice(allowed_operations)
+                first = stack.pop()
+                second = stack.pop()
+                stack.append(f"({first} {operation} {second})")
+                remaining_operations -= 1
+
+        assert len(stack) == 1
+        try:
+            eval(stack[0])
+            return stack[0]
+        except:
+            continue
+
+
+@typed
+def prepare_MM() -> list[TaskInstance]:
+    return [
+        {
+            "prompt": generate_arithmetic_expression(
+                num_operations=np.random.geometric(p=0.5),
+                allowed_operations=["+", "-", "*", "//"],
+                lam=10.0,
+            )
+        }
+        for _ in range(100)
+    ]
+
+@typed
+def grade_MM(task: TaskInstance, responses: list[Response]) -> Metrics:
+    answer = eval(task["prompt"])
+    @typed
+    def is_close(response: str) -> bool:
+        try:
+            number = float(response.strip())
+            return abs(number - answer) <= 0.1
+        except:
+            return False
+
+    correct = [is_close(response) for response in responses]
+    return {
+        "accuracy": 0 if len(correct) == 0 else sum(correct) / len(correct)
+    }

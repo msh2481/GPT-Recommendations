@@ -114,13 +114,16 @@ def test_on_task(task_name: str, samples: int, timeout: int) -> None:
         print(task["prompt"])
         t_start = time.time()
         responses = []
+        time_spent = float(timeout)
         while True:
-            remaining = timeout - (time.time() - t_start)
+            current_time_spent = time.time() - t_start
+            remaining = timeout - current_time_spent
             if remaining < 0:
                 break
             response = input(f"{int(remaining)} seconds remaining: ").strip()
             remaining = timeout - (time.time() - t_start)
-            if remaining < 0:
+            if remaining < 0 or response == "next":
+                time_spent = min(timeout, current_time_spent)
                 print("Timeout")
                 break
             if len(response):
@@ -132,6 +135,7 @@ def test_on_task(task_name: str, samples: int, timeout: int) -> None:
             metrics["answer"] = task["answer"]
         metrics["responses"] = responses
         metrics["timeout"] = timeout
+        metrics["time_spent"] = time_spent
         metrics.update(extra_answers)
         append_jsonl(f"data/{task_name}_results.jsonl", [metrics])
 

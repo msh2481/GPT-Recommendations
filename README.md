@@ -24,6 +24,10 @@ Creativity:
 4. Alternative uses (AU): Generating novel uses for common objects.
 5. Remote associates test (RAT): The participant is presented with three seemingly unrelated words and must find a fourth word that connects them all. This task measures associative thinking and the ability to make novel connections.
 
+Other:
+6. Mental math (MM): The goal is to evaluate a given arithmetic expression as fast as possible.
+7. Dual N-back (NB): Only result tracking here, the game itself is on brainscale.net.
+
 ## References
 - Sun, Jiangzhou, et al. "Training your brain to be more creative: brain functional and structural changes induced by divergent thinking training." Human brain mapping 37.10 (2016): 3375-3387
 - Olteţeanu, Ana-Maria, Mikkel Schöttner, and Susanne Schuberth. "Computationally resurrecting the functional remote associates test using cognitive word associates and principles from a computational solver." Knowledge-Based Systems 168 (2019): 1-9.
