@@ -4,12 +4,12 @@ import random
 from collections import defaultdict
 from itertools import combinations
 from typing import Callable
-
 import numpy as np
 from beartype import beartype as typed
 from tqdm import tqdm
-
 from gpt import batch_invoke, invoke
+import pylcs
+
 
 TaskInstance = dict[str, str]
 Response = str
@@ -250,7 +250,8 @@ def prepare_RAT() -> list[TaskInstance]:
 @typed
 def grade_RAT(task: TaskInstance, responses: list[Response]) -> Metrics:
     is_correct = [
-        response.strip().lower() == task["answer"].lower() for response in responses
+        pylcs.edit_distance(response.strip().lower(), task["answer"].lower()) <= 1
+        for response in responses
     ]
     return {
         "accuracy": 0 if len(is_correct) == 0 else sum(is_correct) / len(is_correct)

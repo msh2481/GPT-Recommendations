@@ -1,0 +1,6 @@
+beartype==0.14.1
+langchain_openai==0.1.1
+numpy==1.21.5
+pylcs==0.1.1
+tqdm==4.66.1
+xmltodict==0.13.0
